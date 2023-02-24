@@ -1,8 +1,13 @@
-FROM alpine:3.16 as build
-
 ARG PXT_VERSION=8.6.11
 ARG PXT_COMMON_PACKAGES_VERSION=10.4.5
 ARG PXT_MICROBIT_VERSION=5.1.3
+
+# build components
+FROM alpine:3.16 as build
+
+ARG PXT_VERSION
+ARG PXT_COMMON_PACKAGES_VERSION
+ARG PXT_MICROBIT_VERSION
 
 RUN apk update \
     && apk upgrade \
@@ -44,11 +49,15 @@ RUN apk update \
 ## create destination image
 FROM nginx:1.23-alpine
 
-LABEL maintainer="Kurucz István <never@nevergone.hu>"
-LABEL vendor="nevergone"
+ARG PXT_VERSION
+ARG PXT_COMMON_PACKAGES_VERSION
+ARG PXT_MICROBIT_VERSION
 
 ENV PXT_VERSION=$PXT_VERSION
 ENV PXT_COMMON_PACKAGES_VERSION=$PXT_COMMON_PACKAGES_VERSION
 ENV PXT_MICROBIT_VERSION=$PXT_MICROBIT_VERSION
+
+LABEL maintainer="Kurucz István <never@nevergone.hu>"
+LABEL vendor="nevergone"
 
 COPY --from=build /static /usr/share/nginx/html
