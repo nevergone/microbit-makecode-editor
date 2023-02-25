@@ -1,10 +1,12 @@
-See: https://makecode.microbit.org/
+A Blocks / JavaScript code editor for the [micro:bit](https://microbit.org) built on Microsoft MakeCode
 
-Project source code: https://github.com/microsoft/pxt-microbit/
+* See: https://makecode.microbit.org/
 
-Builder source code: https://github.com/nevergone/microbit-makecode-editor
+* Project source code: https://github.com/microsoft/pxt-microbit/
 
-Docker Hub: https://hub.docker.com/r/nevergone/microbit-makecode-editor
+* Builder source code: https://github.com/nevergone/microbit-makecode-editor
+
+* Docker Hub: https://hub.docker.com/r/nevergone/microbit-makecode-editor
 
 ***Usage:***
 
