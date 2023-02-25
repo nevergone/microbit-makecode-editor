@@ -61,3 +61,4 @@ LABEL maintainer="Kurucz István <never@nevergone.hu>"
 LABEL vendor="nevergone"
 
 COPY --from=build /static /usr/share/nginx/html
+COPY config/default.conf /etc/nginx/conf.d/default.conf
