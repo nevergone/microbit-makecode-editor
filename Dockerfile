@@ -4,12 +4,18 @@ ARG PXT_MICROBIT_VERSION=7.0.57
 FROM alpine:3.21 AS build
 
 ARG PXT_MICROBIT_VERSION
+ARG USERNAME=unpriv
 
-RUN apk update \
+RUN echo $USERNAME > /.username \
+    && apk update \
     && apk upgrade \
     && apk --no-cache add \
+         bash \
          npm \
+         shadow \
+         sudo \
          wget \
+    && useradd -s /bin/sh -m $USERNAME -p '' \
     ## download and extract pxt-microbit: https://github.com/microsoft/pxt-microbit/
     && wget https://github.com/microsoft/pxt-microbit/archive/refs/tags/v$PXT_MICROBIT_VERSION.tar.gz \
     && mkdir pxt-microbit \
@@ -21,6 +27,13 @@ RUN apk update \
     && npm install \
     && pxt staticpkg \
     && rm -rf /pxt-microbit/built/packaged/hexcache/*
+
+COPY usr /usr
+ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
+VOLUME /pxt-microbit
+WORKDIR /pxt-microbit
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/bin/sh"]
 
 
 ## create destination image
