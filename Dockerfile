@@ -31,7 +31,6 @@ RUN echo $USERNAME > /.username \
 
 COPY usr /usr
 ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
-VOLUME /pxt-microbit
 WORKDIR /pxt-microbit
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
