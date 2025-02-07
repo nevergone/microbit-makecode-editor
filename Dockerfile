@@ -15,7 +15,8 @@ RUN echo $USERNAME > /.username \
          shadow \
          sudo \
          wget \
-    && useradd -s /bin/sh -m $USERNAME -p '' \
+    && useradd -s /bin/bash -m $USERNAME -p '' \
+    && usermod -s /bin/bash root \
     ## download and extract pxt-microbit: https://github.com/microsoft/pxt-microbit/
     && wget https://github.com/microsoft/pxt-microbit/archive/refs/tags/v$PXT_MICROBIT_VERSION.tar.gz \
     && mkdir pxt-microbit \
@@ -33,7 +34,7 @@ ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-
 VOLUME /pxt-microbit
 WORKDIR /pxt-microbit
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/bin/sh"]
+CMD ["/bin/bash"]
 
 
 ## create destination image
