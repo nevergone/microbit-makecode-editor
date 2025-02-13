@@ -61,7 +61,7 @@ RUN echo $USERNAME > /.username \
     && rm -rf /pxt-microbit/built/packaged/hexcache/*
 
 COPY usr /usr
-ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8' PXT_NODOCKER='1'
+ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8' PXT_NODOCKER='1' PXT_MICROBIT_VERSION=$PXT_MICROBIT_VERSION
 WORKDIR /pxt-microbit
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
