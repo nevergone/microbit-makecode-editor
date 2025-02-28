@@ -1,0 +1,21 @@
+services:
+  web:
+    image: nevergone/microbit-makecode-editor:7.0.57-tools
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock  ## Docker host socket, optional
+      # - /media/your_username:/media/unpriv  ## optional, use "pxt deploy" command
+      # - /your_local_pxt_microbit_if_available:/pxt-microbit  ## local pxt-microbit directory, use :-tools image, optional
+    environment:
+      - HISTCONTROL=ignoreboth:erasedups  ## bash history control
+      - PUID=XXX  ## unprivileged user id (user name: unpriv), match host user id
+      - PGID=XXX  ## unprivileged group id (user name: unpriv), match host group id
+      - YOTTA_GITHUB_AUTHTOKEN=XXXXXXXXXX
+      - GITHUB_ACCESS_TOKEN=XXXXXXXXXX
+    stdin_open: true
+    tty: true
+    logging:
+      driver: none
+    restart: unless-stopped
+    network_mode: host
+    # ports:  ## use with :-final and :latest image tag and disable network_mode setting
+    #  - "${MAKECODE_FINAL_WEB:-127.0.0.1:3232}:80"
