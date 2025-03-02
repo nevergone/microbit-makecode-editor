@@ -41,6 +41,8 @@ RUN echo $USERNAME > /.username \
          wget \
          yotta \
     && useradd -s /bin/bash -m $USERNAME -p '' \
+    && npm install -g makecode \
+    && npm install -g node-hid \
     && npm install -g pxt \
     && apt-get autoremove --purge -y \
     && rm -rf /var/lib/apt/* \
