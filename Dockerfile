@@ -1,84 +1,78 @@
 ARG PXT_MICROBIT_VERSION=7.0.57
-ARG SRECORD_VERSION=1.65.0
+ARG NODE_MAJOR=18
 
-# build components
-FROM alpine:3.21 AS build
+# developer tools
+FROM ubuntu:22.04 AS tools
 
+ARG NODE_MAJOR
 ARG PXT_MICROBIT_VERSION
-ARG SRECORD_VERSION
 ARG USERNAME=unpriv
-
-COPY patches /patches
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PXT_NODOCKER='1'
+ENV TZ=Etc/UTC
 
 RUN echo $USERNAME > /.username \
-    && apk update \
-    && apk upgrade \
-    && apk --no-cache add \
-         bash \
-         boost-dev \
+    && apt-get update \
+    && apt-get upgrade -y --force-yes \
+    && apt-get install -y --force-yes --no-install-recommends \
+         ca-certificates \
+         curl \
+         gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y --force-yes --no-install-recommends \
          cargo \
-         clang19 \
          cmake \
          gcc \
          gcc-arm-none-eabi \
-         gcompat \
          git \
-         g++ \
-         g++-arm-none-eabi \
-         libgcrypt-dev \
-         libtool \
+         libnewlib-arm-none-eabi \
+         libstdc++-arm-none-eabi-dev \
+         libstdc++-arm-none-eabi-newlib \
          make \
-         npm \
-         openssl-dev \
-         patch \
-         py3-cryptography \
-         py3-pip \
-         py3-virtualenv \
-         python3-dev \
-         shadow \
-         slibtool \
+         ninja-build \
+         nodejs \
+         openocd \
+         python-is-python3 \
+         srecord \
          sudo \
          wget \
+         yotta \
     && useradd -s /bin/bash -m $USERNAME -p '' \
-    && usermod -s /bin/bash root \
-    ## download & build srecord
-    && DIR_VERSION=`echo $SRECORD_VERSION | grep -Eo '[0-9]\.[0-9]+'` \
-    && wget https://sourceforge.net/projects/srecord/files/srecord/$DIR_VERSION/srecord-$SRECORD_VERSION-Source.tar.gz -O srecord.tar.gz \
-    && tar xf srecord.tar.gz \
-    && cd srecord-$SRECORD_VERSION-Source \
-    && patch -p1 < /patches/01-srecord-disable_doxygen.patch \
-    && patch -p1 < /patches/02-srecord-ldconfig_install_bug.patch \
-    && mkdir build \
-    && cd build \
-    && cmake .. \
-    && cmake --build . \
-    && cmake --install . \
-    && cd / \
-    && rm -rf /patches srecord.tar.gz srecord-$SRECORD_VERSION-Source \
-    ## install yotta
-    && mkdir -p /opt/yotta \
-    && virtualenv /opt/yotta/ \
-    && source /opt/yotta/bin/activate \
-    && pip install markupsafe==2.0.1 maturin ninja setuptools setuptools_scm \
-    && pip install --no-build-isolation PyYAML==5.3.1 yotta \
-    ## download and extract pxt-microbit: https://github.com/microsoft/pxt-microbit/
-    && wget https://github.com/microsoft/pxt-microbit/archive/refs/tags/v$PXT_MICROBIT_VERSION.tar.gz \
+    && npm install -g makecode \
+    && npm install -g node-hid \
+    && npm install -g pxt \
+    && apt-get autoremove --purge -y \
+    && rm -rf /var/lib/apt/* \
+    && rm -rf /var/cache/*
+
+COPY usr /usr
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/bin/bash"]
+
+
+# build developer variant
+FROM tools AS devel
+  
+ARG PXT_MICROBIT_VERSION
+ARG NODE_MAJOR
+ENV NODE_MAJOR=$NODE_MAJOR
+ENV PXT_MICROBIT_VERSION=$PXT_MICROBIT_VERSION
+
+## download and extract pxt-microbit: https://github.com/microsoft/pxt-microbit/
+RUN wget https://github.com/microsoft/pxt-microbit/archive/refs/tags/v$PXT_MICROBIT_VERSION.tar.gz \
     && mkdir pxt-microbit \
     && tar -xf v$PXT_MICROBIT_VERSION.tar.gz -C pxt-microbit --strip-components 1 \
     && rm v$PXT_MICROBIT_VERSION.tar.gz \
     ## pxt-microbit build
     && cd ../pxt-microbit \
-    && npm install -g pxt \
     && npm install \
     && pxt staticpkg \
-    && rm -rf /pxt-microbit/built/packaged/hexcache/* \
-    && rm -rf /root/.cache
+    && rm -rf /pxt-microbit/built/packaged/hexcache/*
 
-COPY usr /usr
-ENV ENV='/etc/profile' LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8' PXT_NODOCKER='1' PXT_MICROBIT_VERSION=$PXT_MICROBIT_VERSION PATH="$PATH:/opt/yotta/bin"
 WORKDIR /pxt-microbit
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/bin/bash"]
 
 
 ## create destination image
@@ -89,5 +83,5 @@ ENV PXT_MICROBIT_VERSION=$PXT_MICROBIT_VERSION
 
 LABEL maintainer="Kurucz István <never@nevergone.hu>"
  
-COPY --from=build /pxt-microbit/built/packaged /usr/share/nginx/html
+COPY --from=devel /pxt-microbit/built/packaged /usr/share/nginx/html
 COPY config/default.conf /etc/nginx/conf.d/default.conf
